@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.henriette.stockverdict.dto.UserRequests.*;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -24,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Users & Authentication", description = "Endpoints for registering, logging in, OTP verification, and user management")
-public class git UserController {
+public class  UserController {
 
     private final UserService userService;
 
@@ -41,10 +43,10 @@ public class git UserController {
      */
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new TRADER account that awaits admin approval.")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
-        String name = request.get("name");
-        String email = request.get("email");
-        String password = request.get("password");
+    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request) {
+        String name = request.name();
+        String email = request.email();
+        String password = request.password();
 
         if (name == null || email == null || password == null) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -83,9 +85,9 @@ public class git UserController {
      */
     @PostMapping("/login")
     @Operation(summary = "Login user", description = "Authenticates using email/password and generates an OTP sent via email.")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String password = request.get("password");
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
+        String email = request.email();
+        String password = request.password();
 
         if (email == null || password == null) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -145,18 +147,17 @@ public class git UserController {
      */
     @PostMapping("/verify-otp")
     @Operation(summary = "Verify OTP", description = "Validates the 6-digit OTP code sent to the user's email.")
-    public ResponseEntity<Map<String, Object>> verifyOtp(@RequestBody Map<String, String> request) {
-        String userIdStr = request.get("userId");
-        String enteredOtp = request.get("otp");
+    public ResponseEntity<Map<String, Object>> verifyOtp(@RequestBody VerifyOtpRequest request) {
+        Long userId = request.userId();
+        String enteredOtp = request.otp();
 
-        if (userIdStr == null || enteredOtp == null) {
+        if (userId == null || enteredOtp == null) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "User ID and OTP are required"
             ));
         }
 
-        Long userId = Long.parseLong(userIdStr);
         enteredOtp = enteredOtp.trim();
 
         Users user = userService.findById(userId);
@@ -246,12 +247,12 @@ public class git UserController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id,
-                                                          @RequestBody Map<String, String> request) {
+                                                          @RequestBody UpdateUserRequest request) {
         Users updatedUser = new Users();
         updatedUser.setId(id);
-        updatedUser.setName(request.get("name"));
-        updatedUser.setRole(request.get("role"));
-        updatedUser.setPassword(request.get("password"));
+        updatedUser.setName(request.name());
+        updatedUser.setRole(request.role());
+        updatedUser.setPassword(request.password());
 
         if (userService.updateUser(updatedUser)) {
             return ResponseEntity.ok(Map.of("success", true, "message", "User updated successfully"));
@@ -267,14 +268,14 @@ public class git UserController {
      */
     @PutMapping("/{id}/profile")
     public ResponseEntity<Map<String, Object>> updateProfile(@PathVariable Long id,
-                                                             @RequestBody Map<String, String> request) {
+                                                             @RequestBody UpdateProfileRequest request) {
         boolean success = userService.updateProfileDetails(
                 id,
-                request.get("name"),
-                request.get("businessName"),
-                request.get("momoCode"),
-                request.get("bankAccountNumber"),
-                request.get("profileImageUrl")
+                request.name(),
+                request.businessName(),
+                request.momoCode(),
+                request.bankAccountNumber(),
+                request.profileImageUrl()
         );
 
         if (success) {
@@ -291,10 +292,10 @@ public class git UserController {
      */
     @PutMapping("/{id}/password")
     public ResponseEntity<Map<String, Object>> changePassword(@PathVariable Long id,
-                                                              @RequestBody Map<String, String> request) {
-        String currentPassword = request.get("currentPassword");
-        String newPassword = request.get("newPassword");
-        String confirmPassword = request.get("confirmPassword");
+                                                              @RequestBody ChangePasswordRequest request) {
+        String currentPassword = request.currentPassword();
+        String newPassword = request.newPassword();
+        String confirmPassword = request.confirmPassword();
 
         if (newPassword == null || !newPassword.equals(confirmPassword)) {
             return ResponseEntity.badRequest().body(Map.of(

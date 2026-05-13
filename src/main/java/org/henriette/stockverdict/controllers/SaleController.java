@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.SaleRequests.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,23 +72,23 @@ public class SaleController {
 
     @PostMapping
     @Operation(summary = "Create a new sale", description = "Processes a shopping cart of items, deduces stock, and creates a transaction record.")
-    public ResponseEntity<Map<String, Object>> createSale(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> createSale(@RequestBody CreateSaleRequest request) {
         try {
-            Long userId = Long.valueOf(request.get("userId").toString());
+            Long userId = request.userId();
             Users user = userService.findById(userId);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                         "success", false, "message", "User not found"));
             }
 
-            String paymentMethod = (String) request.get("paymentMethod");
+            String paymentMethod = request.paymentMethod();
             
             Customer customer = null;
-            if (request.containsKey("customerId") && request.get("customerId") != null) {
-                String customerIdStr = request.get("customerId").toString();
+            if (request.customerId() != null) {
+                String customerIdStr = request.customerId();
                 if ("NEW".equals(customerIdStr)) {
-                    String newName = (String) request.get("newCustomerName");
-                    String newPhone = (String) request.get("newCustomerPhone");
+                    String newName = request.newCustomerName();
+                    String newPhone = request.newCustomerPhone();
                     if (newName != null && !newName.isBlank()) {
                         customer = new Customer(newName, newPhone, "", "", user);
                         customerService.addCustomer(customer);
@@ -96,18 +98,18 @@ public class SaleController {
                 }
             }
 
-            List<Map<String, Object>> itemsData = (List<Map<String, Object>>) request.get("items");
+            List<SaleItemRequest> itemsData = request.items();
             if (itemsData == null || itemsData.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false, "message", "No items selected for sale"));
             }
 
             List<SaleItem> items = new ArrayList<>();
-            for (Map<String, Object> itemData : itemsData) {
-                Long productId = Long.valueOf(itemData.get("productId").toString());
-                Integer qty = Integer.valueOf(itemData.get("quantity").toString());
+            for (SaleItemRequest itemData : itemsData) {
+                Long productId = itemData.productId();
+                Integer qty = itemData.quantity();
 
-                if (qty <= 0) continue;
+                if (qty == null || qty <= 0) continue;
 
                 Products product = productService.getProductById(productId);
                 if (product == null) continue;
@@ -148,16 +150,12 @@ public class SaleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateSale(@PathVariable Long id,
-                                                          @RequestBody Map<String, Object> request) {
+                                                          @RequestBody UpdateSaleRequest request) {
         try {
-            Long productId = Long.valueOf(request.get("productId").toString());
-            Integer quantity = Integer.valueOf(request.get("quantity").toString());
-            String paymentMethod = (String) request.get("paymentMethod");
-            
-            Long customerId = null;
-            if (request.containsKey("customerId") && request.get("customerId") != null) {
-                customerId = Long.valueOf(request.get("customerId").toString());
-            }
+            Long productId = request.productId();
+            Integer quantity = request.quantity();
+            String paymentMethod = request.paymentMethod();
+            Long customerId = request.customerId();
 
             if (saleService.updateSale(id, productId, quantity, paymentMethod, customerId)) {
                 return ResponseEntity.ok(Map.of("success", true, "message", "Sale updated successfully"));

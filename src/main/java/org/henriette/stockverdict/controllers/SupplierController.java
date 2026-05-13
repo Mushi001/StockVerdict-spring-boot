@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.SupplierRequests.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -53,19 +55,15 @@ public class SupplierController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addSupplier(@RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
-        String name = (String) request.get("name");
-        String phone = (String) request.get("phone");
-        String email = (String) request.get("email");
-        String address = (String) request.get("address");
-        String contactPerson = (String) request.get("contactPerson");
-        String notes = (String) request.get("notes");
-        
-        double balanceOwed = 0.0;
-        if (request.containsKey("balanceOwed") && request.get("balanceOwed") != null) {
-            balanceOwed = Double.parseDouble(request.get("balanceOwed").toString());
-        }
+    public ResponseEntity<Map<String, Object>> addSupplier(@RequestBody AddSupplierRequest request) {
+        Long userId = request.userId();
+        String name = request.name();
+        String phone = request.phone();
+        String email = request.email();
+        String address = request.address();
+        String contactPerson = request.contactPerson();
+        String notes = request.notes();
+        double balanceOwed = request.balanceOwed() != null ? request.balanceOwed() : 0.0;
 
         Users user = userService.findById(userId);
         if (user == null) {
@@ -90,9 +88,9 @@ public class SupplierController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateSupplier(@PathVariable Long id,
-                                                              @RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
-        String email = (String) request.get("email");
+                                                              @RequestBody UpdateSupplierRequest request) {
+        Long userId = request.userId();
+        String email = request.email();
 
         if (email != null && !email.isBlank() && supplierService.isEmailExists(email, userId, id)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
@@ -101,17 +99,14 @@ public class SupplierController {
 
         Supplier updated = new Supplier();
         updated.setId(id);
-        updated.setName((String) request.get("name"));
-        updated.setPhone((String) request.get("phone"));
+        updated.setName(request.name());
+        updated.setPhone(request.phone());
         updated.setEmail(email);
-        updated.setAddress((String) request.get("address"));
-        updated.setContactPerson((String) request.get("contactPerson"));
-        updated.setNotes((String) request.get("notes"));
+        updated.setAddress(request.address());
+        updated.setContactPerson(request.contactPerson());
+        updated.setNotes(request.notes());
         
-        double balanceOwed = 0.0;
-        if (request.containsKey("balanceOwed") && request.get("balanceOwed") != null) {
-            balanceOwed = Double.parseDouble(request.get("balanceOwed").toString());
-        }
+        double balanceOwed = request.balanceOwed() != null ? request.balanceOwed() : 0.0;
         updated.setBalanceOwed(balanceOwed);
 
         if (supplierService.updateSupplier(updated)) {

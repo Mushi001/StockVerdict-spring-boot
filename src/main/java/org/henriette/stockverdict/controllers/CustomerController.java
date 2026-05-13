@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.CustomerRequests.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -66,12 +68,12 @@ public class CustomerController {
      * POST /api/customers
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addCustomer(@RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
-        String name = (String) request.get("name");
-        String phone = (String) request.get("phone");
-        String email = (String) request.get("email");
-        String address = (String) request.get("address");
+    public ResponseEntity<Map<String, Object>> addCustomer(@RequestBody AddCustomerRequest request) {
+        Long userId = request.userId();
+        String name = request.name();
+        String phone = request.phone();
+        String email = request.email();
+        String address = request.address();
 
         if (name == null || name.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Name is required"));
@@ -102,8 +104,8 @@ public class CustomerController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateCustomer(@PathVariable Long id,
-                                                              @RequestBody Map<String, String> request) {
-        String email = request.get("email");
+                                                              @RequestBody UpdateCustomerRequest request) {
+        String email = request.email();
         if (email != null && !email.isBlank() && customerService.isEmailExists(email, id)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "success", false, "message", "A customer with this email already exists"));
@@ -111,10 +113,10 @@ public class CustomerController {
 
         Customer updated = new Customer();
         updated.setId(id);
-        updated.setName(request.get("name"));
-        updated.setPhone(request.get("phone"));
+        updated.setName(request.name());
+        updated.setPhone(request.phone());
         updated.setEmail(email);
-        updated.setAddress(request.get("address"));
+        updated.setAddress(request.address());
 
         if (customerService.updateCustomer(updated)) {
             return ResponseEntity.ok(Map.of("success", true, "message", "Customer updated successfully"));

@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.AdminRequests.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,8 +73,8 @@ public class AdminController {
 
     @PutMapping("/traders/{id}/status")
     public ResponseEntity<Map<String, Object>> updateTraderStatus(@PathVariable Long id,
-                                                                  @RequestBody Map<String, String> request) {
-        String status = request.get("status");
+                                                                  @RequestBody UpdateTraderStatusRequest request) {
+        String status = request.status();
         if (status == null || (!status.equals("ACTIVE") && !status.equals("INACTIVE") && !status.equals("PENDING"))) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid status"));
         }

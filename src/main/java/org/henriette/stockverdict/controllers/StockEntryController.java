@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.StockEntryRequests.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -58,12 +60,12 @@ public class StockEntryController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addStockEntry(@RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
-        Long productId = Long.valueOf(request.get("productId").toString());
-        Long supplierId = Long.valueOf(request.get("supplierId").toString());
-        Integer quantityAdded = Integer.valueOf(request.get("quantityAdded").toString());
-        Double purchasePrice = Double.valueOf(request.get("purchasePrice").toString());
+    public ResponseEntity<Map<String, Object>> addStockEntry(@RequestBody AddStockEntryRequest request) {
+        Long userId = request.userId();
+        Long productId = request.productId();
+        Long supplierId = request.supplierId();
+        Integer quantityAdded = request.quantityAdded();
+        Double purchasePrice = request.purchasePrice();
 
         if (quantityAdded <= 0) {
             return ResponseEntity.badRequest().body(Map.of(

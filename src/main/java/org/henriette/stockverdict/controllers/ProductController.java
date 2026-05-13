@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.henriette.stockverdict.dto.ProductRequests.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -69,20 +71,16 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addProduct(@RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
-        String name = (String) request.get("name");
-        String description = (String) request.get("description");
-        String barcode = (String) request.get("barcode");
-        Double purchasePrice = Double.valueOf(request.get("purchasePrice").toString());
-        Double sellingPrice = Double.valueOf(request.get("sellingPrice").toString());
-        Integer quantityInStock = Integer.valueOf(request.get("quantityInStock").toString());
-        Integer reorderLevel = Integer.valueOf(request.get("reorderLevel").toString());
-        
-        Long supplierId = null;
-        if (request.containsKey("supplierId") && request.get("supplierId") != null) {
-            supplierId = Long.valueOf(request.get("supplierId").toString());
-        }
+    public ResponseEntity<Map<String, Object>> addProduct(@RequestBody AddProductRequest request) {
+        Long userId = request.userId();
+        String name = request.name();
+        String description = request.description();
+        String barcode = request.barcode();
+        Double purchasePrice = request.purchasePrice();
+        Double sellingPrice = request.sellingPrice();
+        Integer quantityInStock = request.quantityInStock();
+        Integer reorderLevel = request.reorderLevel();
+        Long supplierId = request.supplierId();
 
         if (sellingPrice < purchasePrice) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -118,15 +116,11 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateProduct(@PathVariable Long id,
-                                                             @RequestBody Map<String, Object> request) {
-        String barcode = (String) request.get("barcode");
-        Double purchasePrice = Double.valueOf(request.get("purchasePrice").toString());
-        Double sellingPrice = Double.valueOf(request.get("sellingPrice").toString());
-        
-        Long supplierId = null;
-        if (request.containsKey("supplierId") && request.get("supplierId") != null) {
-            supplierId = Long.valueOf(request.get("supplierId").toString());
-        }
+                                                             @RequestBody UpdateProductRequest request) {
+        String barcode = request.barcode();
+        Double purchasePrice = request.purchasePrice();
+        Double sellingPrice = request.sellingPrice();
+        Long supplierId = request.supplierId();
 
         if (sellingPrice < purchasePrice) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -145,13 +139,13 @@ public class ProductController {
 
         Products updated = new Products();
         updated.setId(id);
-        updated.setName((String) request.get("name"));
-        updated.setDescription((String) request.get("description"));
+        updated.setName(request.name());
+        updated.setDescription(request.description());
         updated.setBarcode(barcode);
         updated.setPurchasePrice(purchasePrice);
         updated.setSellingPrice(sellingPrice);
-        updated.setQuantityInStock(Integer.valueOf(request.get("quantityInStock").toString()));
-        updated.setReorderLevel(Integer.valueOf(request.get("reorderLevel").toString()));
+        updated.setQuantityInStock(request.quantityInStock());
+        updated.setReorderLevel(request.reorderLevel());
         updated.setSupplier(supplier);
 
         if (productService.updateProduct(updated)) {
