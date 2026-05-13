@@ -14,13 +14,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST Controller for User authentication and management.
  * Handles registration, login, OTP verification, profile updates, and deletion.
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+@Tag(name = "Users & Authentication", description = "Endpoints for registering, logging in, OTP verification, and user management")
+public class git UserController {
 
     private final UserService userService;
 
@@ -36,6 +40,7 @@ public class UserController {
      * Registers a new user with TRADER role and PENDING status.
      */
     @PostMapping("/register")
+    @Operation(summary = "Register a new user", description = "Creates a new TRADER account that awaits admin approval.")
     public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
         String name = request.get("name");
         String email = request.get("email");
@@ -77,6 +82,7 @@ public class UserController {
      * Authenticates user and generates OTP for 2FA.
      */
     @PostMapping("/login")
+    @Operation(summary = "Login user", description = "Authenticates using email/password and generates an OTP sent via email.")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String password = request.get("password");
@@ -138,6 +144,7 @@ public class UserController {
      * Verifies OTP and completes authentication.
      */
     @PostMapping("/verify-otp")
+    @Operation(summary = "Verify OTP", description = "Validates the 6-digit OTP code sent to the user's email.")
     public ResponseEntity<Map<String, Object>> verifyOtp(@RequestBody Map<String, String> request) {
         String userIdStr = request.get("userId");
         String enteredOtp = request.get("otp");

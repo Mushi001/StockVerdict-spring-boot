@@ -19,11 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST Controller for Sales management.
  */
 @RestController
 @RequestMapping("/api/sales")
+@Tag(name = "Sales & Transactions", description = "Endpoints for processing and retrieving sales transactions")
 public class SaleController {
 
     private final SaleService saleService;
@@ -41,6 +45,7 @@ public class SaleController {
     }
 
     @GetMapping
+    @Operation(summary = "Get sales history", description = "Retrieves all sales history for a specific user.")
     public ResponseEntity<Map<String, Object>> getSales(@RequestParam Long userId) {
         List<Sales> sales = saleService.getSalesByUser(userId);
         return ResponseEntity.ok(Map.of("success", true, "count", sales.size(), "sales", sales));
@@ -64,6 +69,7 @@ public class SaleController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new sale", description = "Processes a shopping cart of items, deduces stock, and creates a transaction record.")
     public ResponseEntity<Map<String, Object>> createSale(@RequestBody Map<String, Object> request) {
         try {
             Long userId = Long.valueOf(request.get("userId").toString());

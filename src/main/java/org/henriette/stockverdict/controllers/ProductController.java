@@ -15,11 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * REST Controller for Product management.
  */
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Products", description = "Endpoints for managing products, inventory, and low stock items")
 public class ProductController {
 
     private final ProductService productService;
@@ -34,12 +38,14 @@ public class ProductController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all products", description = "Retrieves all products managed by a specific user ID.")
     public ResponseEntity<Map<String, Object>> getProducts(@RequestParam Long userId) {
         List<Products> products = productService.getProductsByUser(userId);
         return ResponseEntity.ok(Map.of("success", true, "count", products.size(), "products", products));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get product by ID", description = "Retrieves details of a single product.")
     public ResponseEntity<Map<String, Object>> getProductById(@PathVariable Long id) {
         Products product = productService.getProductById(id);
         if (product == null) {
