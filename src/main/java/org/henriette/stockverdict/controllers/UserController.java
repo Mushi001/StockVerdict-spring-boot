@@ -43,26 +43,24 @@ public class UserController {
      */
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account. Accounts default to PENDING status requiring admin approval.")
-    public ResponseEntity<ApiResponse<Void>> registerUser(@RequestBody RegisterUserRequest request) {
+    public ResponseEntity<ApiResponse<Void>> registerUser(@RequestBody RegisterRequest request) {
         String name = request.name();
         String email = request.email();
         String password = request.password();
-        String businessName = request.businessName();
-        String recaptchaToken = request.recaptchaToken();
 
-        if (userService.isEmailTaken(email)) {
+        if (userService.isEmailExists(email)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ApiResponse<>(false, "Email already exists"));
         }
 
-        Users user = new Users(name, email, password, businessName);
+        Users user = new Users(name, email, password, ""); // Business name empty by default
 
-        if (userService.registerUser(user, recaptchaToken)) {
+        if (userService.registerUser(user)) {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse<>(true, "Registration successful. Please wait for admin approval."));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, "Registration failed or ReCAPTCHA invalid"));
+                .body(new ApiResponse<>(false, "Registration failed"));
     }
 
     /**
@@ -73,11 +71,11 @@ public class UserController {
      */
     @PostMapping("/login")
     @Operation(summary = "Login to account", description = "Validates credentials and sends a 6-digit OTP to the user's registered email address.")
-    public ResponseEntity<ApiResponse<Void>> loginUser(@RequestBody LoginUserRequest request) {
+    public ResponseEntity<ApiResponse<Void>> loginUser(@RequestBody LoginRequest request) {
         String email = request.email();
         String password = request.password();
 
-        Users user = userService.authenticate(email, password);
+        Users user = userService.loginUser(email, password);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>(false, "Invalid email or password"));
@@ -88,7 +86,9 @@ public class UserController {
                     .body(new ApiResponse<>(false, "Your account is awaiting administrative approval"));
         }
 
-        if (userService.generateAndSendOtp(user)) {
+        String otpCode = String.format("%06d", new java.util.Random().nextInt(999999));
+        if (userService.saveOtp(user, otpCode, java.time.LocalDateTime.now().plusMinutes(5))) {
+            userService.sendOtpEmail(user.getEmail(), otpCode);
             return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent to your email"));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -104,21 +104,22 @@ public class UserController {
     @PostMapping("/verify-otp")
     @Operation(summary = "Verify OTP & Generate Token", description = "Validates the OTP and returns a JWT Bearer token for accessing protected endpoints.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> verifyOtp(@RequestBody VerifyOtpRequest request) {
-        String email = request.email();
+        Long userId = request.userId();
         String otp = request.otp();
 
-        Users user = userService.findByEmail(email);
+        Users user = userService.findById(userId);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, "User not found"));
         }
 
-        if (!userService.verifyOtp(user, otp)) {
+        org.henriette.stockverdict.models.Otp latestOtp = userService.getLatestOtp(user);
+        if (latestOtp == null || !latestOtp.getOtpCode().equals(otp) || latestOtp.isUsed() || latestOtp.getExpiryTime().isBefore(java.time.LocalDateTime.now())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>(false, "Invalid or expired OTP"));
         }
 
-        userService.markOtpAsUsed(otp);
+        userService.markOtpAsUsed(latestOtp);
 
         // Generate JWT Token
         String token = jwtUtil.generateToken(user);
@@ -168,18 +169,14 @@ public class UserController {
     @PutMapping("/{id}")
     @Operation(summary = "Update user profile", description = "Updates the name, business name, or profile image of an existing user.")
     public ResponseEntity<ApiResponse<Void>> updateUser(@PathVariable Long id,
-                                                        @RequestBody UpdateUserRequest request) {
+                                                        @RequestBody UpdateProfileRequest request) {
         Users existingUser = userService.findById(id);
         if (existingUser == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(false, "User not found"));
         }
 
-        existingUser.setName(request.name());
-        existingUser.setBusinessName(request.businessName());
-        existingUser.setProfileImageUrl(request.profileImageUrl());
-
-        if (userService.updateUser(existingUser)) {
+        if (userService.updateProfileDetails(id, request.name(), request.businessName(), request.momoCode(), request.bankAccountNumber(), request.profileImageUrl())) {
             return ResponseEntity.ok(new ApiResponse<>(true, "User updated successfully"));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

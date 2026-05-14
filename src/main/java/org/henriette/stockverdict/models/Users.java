@@ -3,8 +3,10 @@ package org.henriette.stockverdict.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -32,6 +34,7 @@ public class Users implements Serializable {
         /**
          * The user's email address, which is unique and often used for logging in.
          */
+        @Email(message = "Email should be valid")
         @Column(nullable = false, unique = true)
         private String email;
 
@@ -73,7 +76,6 @@ public class Users implements Serializable {
 
         @Column(nullable = true)
         private String status = "PENDING"; // State: PENDING, ACTIVE, INACTIVE
-
         // Constructors
         /**
          * Default constructor.

@@ -19,10 +19,10 @@ import java.util.Map;
 @Tag(name = "Payments", description = "Endpoints for handling payments and integration with external payment gateways.")
 public class PaymentController {
 
-    @Value("${flutterwave.public.key}")
+    @Value("${flutterwave.public.key:}")
     private String flutterwavePublicKey;
 
-    @Value("${flutterwave.secret.key}")
+    @Value("${flutterwave.secret.key:}")
     private String flutterwaveSecretKey;
 
     /**

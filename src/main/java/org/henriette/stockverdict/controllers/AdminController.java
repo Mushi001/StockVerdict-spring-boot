@@ -63,7 +63,7 @@ public class AdminController {
                     .body(new ApiResponse<>(false, "Invalid status"));
         }
 
-        if (userService.updateTraderStatus(id, status)) {
+        if (userService.updateUserStatus(id, status)) {
             return ResponseEntity.ok(new ApiResponse<>(true, "Trader status updated successfully"));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
