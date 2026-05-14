@@ -29,10 +29,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class  UserController {
 
     private final UserService userService;
+    private final org.henriette.stockverdict.security.JwtUtil jwtUtil;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, org.henriette.stockverdict.security.JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     // ==================== Authentication ====================
@@ -193,6 +195,9 @@ public class  UserController {
 
         userService.markOtpAsUsed(otp);
 
+        // Generate JWT Token
+        String token = jwtUtil.generateToken(user);
+
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", user.getId());
         userData.put("name", user.getName());
@@ -205,6 +210,7 @@ public class  UserController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "Authentication successful");
+        response.put("token", token);
         response.put("user", userData);
         return ResponseEntity.ok(response);
     }
