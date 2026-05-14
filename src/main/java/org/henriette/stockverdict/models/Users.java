@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.Length;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -28,6 +31,8 @@ public class Users implements Serializable {
         /**
          * The full name of the user.
          */
+        @Length(min = 3, max = 40)
+        @NotBlank
         @Column(nullable = false)
         private String name;
 
@@ -42,6 +47,11 @@ public class Users implements Serializable {
          * The hashed password used for authentication.
          */
         @Column(nullable = false)
+        @NotBlank(message = "Password is required")
+        @Pattern(
+                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$",
+                message = "Password must be 8-15 characters, include uppercase, lowercase, number, and special character"
+        )
         private String password;
 
         /**
