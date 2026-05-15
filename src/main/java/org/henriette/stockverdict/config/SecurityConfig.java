@@ -40,6 +40,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/payment/**").permitAll()
                 // Swagger UI & API Docs
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                // Allow spring boot error dispatcher
+                .requestMatchers("/error").permitAll()
                 // Admin specific (optional restriction by role)
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // All other requests require authentication

@@ -71,7 +71,7 @@ public class UserController {
      */
     @PostMapping("/login")
     @Operation(summary = "Login to account", description = "Validates credentials and sends a 6-digit OTP to the user's registered email address.")
-    public ResponseEntity<ApiResponse<Void>> loginUser(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(@RequestBody LoginRequest request) {
         String email = request.email();
         String password = request.password();
 
@@ -86,13 +86,12 @@ public class UserController {
                     .body(new ApiResponse<>(false, "Your account is awaiting administrative approval"));
         }
 
-        String otpCode = String.format("%06d", new java.util.Random().nextInt(999999));
-        if (userService.saveOtp(user, otpCode, java.time.LocalDateTime.now().plusMinutes(5))) {
-            userService.sendOtpEmail(user.getEmail(), otpCode);
-            return ResponseEntity.ok(new ApiResponse<>(true, "OTP sent to your email"));
-        }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, "Failed to send OTP"));
+        // Generate JWT token directly without OTP
+        String token = jwtUtil.generateToken(user);
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", user.getId());
+        data.put("token", token);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", data));
     }
 
     /**
